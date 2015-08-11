@@ -127,26 +127,52 @@ malloc:
 	jmp .lp
 .found:
 	mov rax, rbx
-	jmp .end
-.end:
 	pop rbp
 	ret
 .notfound:
-	; allocate more memory
-	; mmap's gonna take a sec, so we make
-	; the find branch linear.
-	; write mmap error message
-	call printx ; rdi already set
+; allocate more memory
+; mmap's gonna take a sec, so we make
+; the find branch linear.
+; write mmap error message
+; attempt to mmap stack space
+	push rdi
 
+	mov rcx, 0xfff
+	not rcx
+	and rdi, rcx
+	mov rsi, rdi
+	cmp rsi, 0
+	jnz .noadd2
+	add rsi, 0x1000
+	.noadd2:
+	push rsi
+
+	mov rax, 9 ; mmap
+	mov rdi, 0
+	mov rdx, 0x3
+	mov r10, 0x22
+	mov r8, -1
+	mov r9, 0
+	syscall
+
+	; setup header
+	pop rsi
+	mov qword [rax], rsi
+	mov qword [rax + 8], freelist
+	mov [freelist], rax
+
+	; write mmap error message
 	mov rax, 1
 	mov rdi, 1
-	mov rsi, malloc.errmsg
-	mov rdx, malloc.errmsg.len
+	mov rsi, malloc.msg
+	mov rdx, malloc.msg.len
 	syscall
-	jmp .end
 
-malloc.errmsg: db ": malloc didn't have any memory of that size", 10
-malloc.errmsg.len: equ $-malloc.errmsg
+	pop rdi
+	jmp .main ; new memory added to pool, redo malloc call
+
+malloc.errmsg: db "mapping more pages", 10
+malloc.msg.len: equ $-malloc.msg
 
 mmap.size: dd 0x1000
 mmap.errmsg: db "mmap returned an error", 10
