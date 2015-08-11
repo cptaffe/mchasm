@@ -171,7 +171,7 @@ malloc:
 	pop rdi
 	jmp .main ; new memory added to pool, redo malloc call
 
-malloc.errmsg: db "mapping more pages", 10
+malloc.msg: db "mapping more pages", 10
 malloc.msg.len: equ $-malloc.msg
 
 mmap.size: dd 0x1000
