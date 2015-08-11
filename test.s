@@ -103,7 +103,6 @@ global malloc
 malloc:
 	push rbp
 	mov rbp, rsp
-
 	; rdi has size needed
 	mov rbx, rdi
 	mov rax, 0x7
@@ -169,7 +168,8 @@ malloc:
 	syscall
 
 	pop rdi
-	jmp .main ; new memory added to pool, redo malloc call
+	pop rbp
+	jmp malloc ; new memory added to pool, redo malloc call
 
 malloc.msg: db "mapping more pages", 10
 malloc.msg.len: equ $-malloc.msg
